@@ -22,17 +22,29 @@ app = Flask(__name__)
 def welcome():
     return (
         f"Available Routes:<br/>"
-        f"/api/v1.0/precipitation"
-           )
+        f"/api/v1.0/precipitation<br/>"
+        f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/<start><br/>"
+        f"/api/v1.0/<start>/<end>"
+        )
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
-     (
-        previous = dt.date(2017, 8, 23) - dt.timedelta(days=365)
-        results = session.query(Measurement.date, Measurement.prcp).\
-            filter(Measurement.date >= previous).all()
-       return jsonify() 
-           )
+    
+    results = session.query(Measurement.date, Measurement.prcp).\
+        filter(Measurement.station == "USC00519281").all()
 
+    precip = []    
+    for date, prcp in results:
+        precip_dict = {}
+        precip_dict["date"] = date
+        precip_dict["prcp"] = prcp
+        precip.append(precip_dict)
+
+    return jsonify(precip)
+
+    session.close()
+        
 if __name__ == '__main__':
     app.run(debug=True)
