@@ -4,6 +4,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 from flask import Flask, jsonify
+import datetime as dt
 
 engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
@@ -35,7 +36,9 @@ def welcome():
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     
-    results = session.query(Measurement.date, Measurement.prcp).all()
+    previous = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+    results = session.query(Measurement.date, Measurement.prcp).\
+        filter(Measurement.date >= previous).all()
 
     precip = []    
     for date, prcp in results:
@@ -62,12 +65,17 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def tobs():
     
-    most_temps_and_station = session.query(Measurement.station, func.count(Measurement.tobs)).\
+    previous = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+    pre_previous = previous - dt.timedelta(days=365)
+    temps_and_station = session.query(Measurement.station, func.count(Measurement.tobs)).\
+                  filter(Measurement.date >= previous).\
                   group_by(Measurement.station).\
                   order_by(func.count(Measurement.tobs).desc()).first()
     
     results = session.query(Measurement.tobs).\
-              filter(Measurement.station == most_temps_and_station[0]).all()
+              filter(Measurement.station == temps_and_station[0]).\
+              filter(Measurement.date >= pre_previous).\
+              filter(Measurement.date < previous).all()
 
     return jsonify(results)
     session.close()
