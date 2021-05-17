@@ -1,4 +1,3 @@
-import numpy as np
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -22,13 +21,16 @@ app = Flask(__name__)
 @app.route("/")
 def welcome():
     return (
-        f"Available Routes:<br/>"
-        f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/stations<br/>"
-        f"/api/v1.0/tobs<br/>"
-        f"YOU CHOOSE START OF PERIOD<br/>"
-        f"/api/v1.0/start<br/>"
-        f"YOU CHOOSE START AND END OF PERIOD<br/>"
+        f"Available Routes:<br/><br/>"
+        f"See most recent 12 months of precipitation data:<br/>"
+        f"/api/v1.0/precipitation<br/><br/>"
+        f"See station information:<br/>"
+        f"/api/v1.0/stations<br/><br/>"
+        f"See second most recent 12 months of temperature data from the most active station:<br/>"
+        f"/api/v1.0/tobs<br/><br/>"
+        f"You choose the start date (yyyy-mm-dd) which ends at most recent measurements, see minimum/maximum/average temperatures:<br/>"
+        f"/api/v1.0/start<br/><br/>"
+        f"You choose the start and end date(yyyy-mm-dd/yyyy-mm-dd), see minimum/maximum/average temperatures:<br/>"
         f"/api/v1.0/start/end"
         )
 
@@ -37,14 +39,15 @@ def welcome():
 def precipitation():
     
     previous = dt.date(2017, 8, 23) - dt.timedelta(days=365)
-    results = session.query(Measurement.date, Measurement.prcp).\
+    results = session.query(Measurement.date, Measurement.prcp, Station.name).\
         filter(Measurement.date >= previous).all()
 
     precip = []    
-    for date, prcp in results:
+    for date, prcp, name in results:
         precip_dict = {}
-        precip_dict["date"] = date
-        precip_dict["prcp"] = prcp
+        precip_dict["Date"] = date
+        precip_dict["Precipitation"] = prcp
+        precip_dict["Name"] = name
         precip.append(precip_dict)
 
     return jsonify(precip)
